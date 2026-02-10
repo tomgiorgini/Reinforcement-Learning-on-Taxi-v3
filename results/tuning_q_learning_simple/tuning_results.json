@@ -1,0 +1,532 @@
+{
+  "best": {
+    "overrides": {
+      "alpha": 0.3,
+      "gamma": 0.95,
+      "eps_end": 0.01,
+      "eps_decay_episodes": 2000
+    },
+    "eval": {
+      "eval_mean_reward": 7.9,
+      "eval_mean_steps": 13.1,
+      "eval_success_rate": 1.0,
+      "eval_mean_penalties": 0.0
+    },
+    "score": 204.625
+  },
+  "all_runs": [
+    {
+      "run_id": 1,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.9,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -149.4,
+        "eval_mean_steps": 154.44,
+        "eval_success_rate": 0.24,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -140.01
+    },
+    {
+      "run_id": 2,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.9,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -128.72,
+        "eval_mean_steps": 135.86,
+        "eval_success_rate": 0.34,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -94.685
+    },
+    {
+      "run_id": 3,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.9,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -128.58,
+        "eval_mean_steps": 135.72,
+        "eval_success_rate": 0.34,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -94.51000000000002
+    },
+    {
+      "run_id": 4,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.95,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -124.42,
+        "eval_mean_steps": 131.98,
+        "eval_success_rate": 0.36,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -85.41499999999999
+    },
+    {
+      "run_id": 5,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.95,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -124.38,
+        "eval_mean_steps": 131.94,
+        "eval_success_rate": 0.36,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -85.365
+    },
+    {
+      "run_id": 6,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.95,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -132.72,
+        "eval_mean_steps": 139.44,
+        "eval_success_rate": 0.32,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -103.58
+    },
+    {
+      "run_id": 7,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.99,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -120.22,
+        "eval_mean_steps": 128.2,
+        "eval_success_rate": 0.38,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -76.27
+    },
+    {
+      "run_id": 8,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.99,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -124.44,
+        "eval_mean_steps": 132.0,
+        "eval_success_rate": 0.36,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -85.44
+    },
+    {
+      "run_id": 9,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.1,
+        "gamma": 0.99,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -141.12,
+        "eval_mean_steps": 147.0,
+        "eval_success_rate": 0.28,
+        "eval_mean_penalties": 0.0
+      },
+      "score": -121.87
+    },
+    {
+      "run_id": 10,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.9,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 3.82,
+        "eval_mean_steps": 16.76,
+        "eval_success_rate": 0.98,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 195.63
+    },
+    {
+      "run_id": 11,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.9,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -4.52,
+        "eval_mean_steps": 24.26,
+        "eval_success_rate": 0.94,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 177.415
+    },
+    {
+      "run_id": 12,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.9,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 3.76,
+        "eval_mean_steps": 16.82,
+        "eval_success_rate": 0.98,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 195.55499999999998
+    },
+    {
+      "run_id": 13,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.95,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.9,
+        "eval_mean_steps": 13.1,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.625
+    },
+    {
+      "run_id": 14,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.95,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -12.7,
+        "eval_mean_steps": 31.6,
+        "eval_success_rate": 0.9,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 159.4
+    },
+    {
+      "run_id": 15,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.95,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 3.82,
+        "eval_mean_steps": 16.76,
+        "eval_success_rate": 0.98,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 195.63
+    },
+    {
+      "run_id": 16,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.99,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 3.82,
+        "eval_mean_steps": 16.76,
+        "eval_success_rate": 0.98,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 195.63
+    },
+    {
+      "run_id": 17,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.99,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 3.76,
+        "eval_mean_steps": 16.82,
+        "eval_success_rate": 0.98,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 195.55499999999998
+    },
+    {
+      "run_id": 18,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.3,
+        "gamma": 0.99,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": -0.32,
+        "eval_mean_steps": 20.48,
+        "eval_success_rate": 0.96,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 186.56
+    },
+    {
+      "run_id": 19,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.9,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.86,
+        "eval_mean_steps": 13.14,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.57500000000002
+    },
+    {
+      "run_id": 20,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.9,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.9,
+        "eval_mean_steps": 13.1,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.625
+    },
+    {
+      "run_id": 21,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.9,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.9,
+        "eval_mean_steps": 13.1,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.625
+    },
+    {
+      "run_id": 22,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.95,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 3.76,
+        "eval_mean_steps": 16.82,
+        "eval_success_rate": 0.98,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 195.55499999999998
+    },
+    {
+      "run_id": 23,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.95,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 3.76,
+        "eval_mean_steps": 16.82,
+        "eval_success_rate": 0.98,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 195.55499999999998
+    },
+    {
+      "run_id": 24,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.95,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.9,
+        "eval_mean_steps": 13.1,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.625
+    },
+    {
+      "run_id": 25,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.99,
+        "eps_end": 0.01,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.9,
+        "eval_mean_steps": 13.1,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.625
+    },
+    {
+      "run_id": 26,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.99,
+        "eps_end": 0.05,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.9,
+        "eval_mean_steps": 13.1,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.625
+    },
+    {
+      "run_id": 27,
+      "seed": 42,
+      "train_episodes": 1000,
+      "eval_episodes": 50,
+      "overrides": {
+        "alpha": 0.5,
+        "gamma": 0.99,
+        "eps_end": 0.1,
+        "eps_decay_episodes": 2000
+      },
+      "eval": {
+        "eval_mean_reward": 7.9,
+        "eval_mean_steps": 13.1,
+        "eval_success_rate": 1.0,
+        "eval_mean_penalties": 0.0
+      },
+      "score": 204.625
+    }
+  ]
+}
