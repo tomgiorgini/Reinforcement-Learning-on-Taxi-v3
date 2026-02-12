@@ -106,13 +106,13 @@ def load_dqn_model(
 if __name__ == "__main__":
     ENV_ID = "Taxi-v3"
     SEED = 42
-    TEST_EPISODES = 100
+    TEST_EPISODES = 1000
     MAX_STEPS = 200
-    ROLLING = 10
+    ROLLING = 50
 
     # ---- Paths (adapt if needed) ----
     # If you saved the "best" checkpoint from training:
-    MODEL_PATH = "results/dqn_single/dqn_seed42.pth"
+    MODEL_PATH = "results/train_dqn/dqn_seed42.pth"
     # Or the final model:
     # MODEL_PATH = "results/dqn_single/dqn_seed42.pth"
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -28,6 +28,7 @@ def save_single_run_curve(
     ylabel: str,
     outpath: str,
     rolling_window: int = 50,
+    xlim: Optional[Tuple[float, float]] = None,
 ) -> None:
     x = np.asarray(x)
     y = np.asarray(y, dtype=float)
@@ -40,6 +41,8 @@ def save_single_run_curve(
     plt.title(title)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+    if xlim is not None:
+        plt.xlim(xlim)
     plt.tight_layout()
     plt.savefig(outpath, dpi=200)
     plt.close()

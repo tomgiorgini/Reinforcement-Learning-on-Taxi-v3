@@ -10,13 +10,14 @@ import gymnasium as gym
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
+import matplotlib.pyplot as plt
 
 # Add project root to sys.path
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from utils.plotting import save_single_run_curve
+from utils.plotting import rolling_mean
 from utils.logging import EpisodeLog
 from config import GlobalConfig, DQNConfig
 
@@ -223,7 +224,7 @@ def train_dqn(
 if __name__ == "__main__":
     SEED = 42
     EPISODES = 3000
-    OUTDIR = "results/dqn_single"
+    OUTDIR = "results/train_dqn"
 
     global_cfg = GlobalConfig()
     dqn_cfg = DQNConfig()
@@ -242,39 +243,104 @@ if __name__ == "__main__":
     print(f"Episodes: {dqn_cfg.episodes}")
     print(f"Artifacts dir: {OUTDIR}")
 
-    # save plots
+    # -------------------------
+# Setup for plots (raw + rolling) + zoom mask
+# -------------------------
     ep = metrics["episode"]
+    w = global_cfg.rolling_window
 
-    save_single_run_curve(
-        ep, metrics["episode_reward"],
-        title="DQN (single run) - Reward",
-        xlabel="Episode", ylabel="Reward",
-        outpath=os.path.join(OUTDIR, f"reward_seed{SEED}.png"),
-        rolling_window=global_cfg.rolling_window,
-    )
+    # raw
+    reward_raw = metrics["episode_reward"]
+    steps_raw  = metrics["steps"]
+    pen_raw    = metrics["penalties"]
+    succ_raw   = metrics["success"]
 
-    save_single_run_curve(
-        ep, metrics["penalties"],
-        title="DQN (single run) - Penalties (-10 count)",
-        xlabel="Episode", ylabel="Penalties",
-        outpath=os.path.join(OUTDIR, f"penalties_seed{SEED}.png"),
-        rolling_window=global_cfg.rolling_window,
-    )
+    # rolling
+    reward_sm = rolling_mean(reward_raw, w)
+    steps_sm  = rolling_mean(steps_raw,  w)
+    pen_sm    = rolling_mean(pen_raw,    w)
+    succ_sm   = rolling_mean(succ_raw,   w)
 
-    save_single_run_curve(
-        ep, metrics["steps"],
-        title="DQN (single run) - Steps per episode",
-        xlabel="Episode", ylabel="Steps",
-        outpath=os.path.join(OUTDIR, f"steps_seed{SEED}.png"),
-        rolling_window=global_cfg.rolling_window,
-    )
+    # zoom mask (1000–3000)
+    m = (ep >= 1000) & (ep <= 3000)
 
-    save_single_run_curve(
-        ep, metrics["success"],
-        title="DQN (single run) - Success (rolling mean)",
-        xlabel="Episode", ylabel="Success rate",
-        outpath=os.path.join(OUTDIR, f"success_seed{SEED}.png"),
-        rolling_window=global_cfg.rolling_window,
-    )
 
+    # -------------------------
+    # FULL (0–3000) — raw + rolling mean
+    # -------------------------
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep, reward_raw, linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep, reward_sm,  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Reward per episode (0–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Reward")
+    plt.xlim(0, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "reward_full.png"), dpi=150)
+    plt.close()
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep, pen_raw, linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep, pen_sm,  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Penalties per episode (0–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Penalties")
+    plt.xlim(0, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "penalties_full.png"), dpi=150)
+    plt.close()
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep, steps_raw, linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep, steps_sm,  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Steps per episode (0–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Steps")
+    plt.xlim(0, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "steps_full.png"), dpi=150)
+    plt.close()
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep, succ_raw, linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep, succ_sm,  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Success per episode (0–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Success rate")
+    plt.xlim(0, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "success_full.png"), dpi=150)
+    plt.close()
+
+
+    # -------------------------
+    # ZOOM (1000–3000) — raw + rolling mean (4 plot separati)
+    # -------------------------
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep[m], reward_raw[m], linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep[m], reward_sm[m],  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Reward per episode (1000–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Reward")
+    plt.xlim(1000, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "reward_zoom.png"), dpi=150)
+    plt.close()
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep[m], pen_raw[m], linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep[m], pen_sm[m],  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Penalties per episode (1000–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Penalties")
+    plt.xlim(1000, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "penalties_zoom.png"), dpi=150)
+    plt.close()
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep[m], steps_raw[m], linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep[m], steps_sm[m],  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Steps per episode (1000–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Steps")
+    plt.xlim(1000, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "steps_zoom.png"), dpi=150)
+    plt.close()
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(ep[m], succ_raw[m], linewidth=1.0, alpha=0.35, label="raw")
+    plt.plot(ep[m], succ_sm[m],  linewidth=2.0, label=f"rolling mean (w={w})")
+    plt.title("DQN - Success per episode (1000–3000)")
+    plt.xlabel("Episode"); plt.ylabel("Success rate")
+    plt.xlim(1000, 3000); plt.grid(True, alpha=0.3); plt.legend()
+    plt.savefig(os.path.join(OUTDIR, "success_zoom.png"), dpi=150)
+    plt.close()
     print(f"Plots saved in: {OUTDIR}\n")

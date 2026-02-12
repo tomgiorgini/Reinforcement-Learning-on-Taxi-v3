@@ -51,12 +51,12 @@ def run_greedy_q_table(env_id: str, Q: np.ndarray, seed: int, episodes: int, max
 if __name__ == "__main__":
     ENV_ID = "Taxi-v3"
     SEED = 42
-    TEST_EPISODES = 100
+    TEST_EPISODES = 1000
     MAX_STEPS = 200
 
-    Q_PATH = "results/q_learning_single/Q_seed42.npy"
+    Q_PATH = "results/train_q_learning/Q_seed42.npy"
     OUTDIR = "results/test_q_learning_seed42"
-    ROLLING = 10 
+    ROLLING = 200
 
     os.makedirs(OUTDIR, exist_ok=True)
 
