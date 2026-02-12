@@ -1,100 +1,31 @@
 from typing import Dict, Tuple
 import os
 import sys
+import os
+import numpy as np
+import gymnasium as gym
 
 # Add project root to sys.path
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-import numpy as np
-import gymnasium as gym
-
+from utils.plotting import save_single_run_curve
 from config import QLearningConfig, GlobalConfig
 from utils.logging import EpisodeLog
 
+
+# epsilon decay linearly until decay_episodes, when it stops
 def linear_epsilon(episode: int, eps_start: float, eps_end: float, decay_episodes: int) -> float:
-    """
-    Linear epsilon decay:
-    - stays at eps_start initially
-    - decreases linearly for `decay_episodes`
-    - bottoms out at eps_end
-    """
     if decay_episodes <= 0:
         return eps_end
     frac = min(1.0, episode / decay_episodes)
     return eps_start + frac * (eps_end - eps_start)
 
 
-def evaluate_q_table(env_id: str, Q: np.ndarray, seed: int, episodes: int, max_steps: int) -> Dict[str, float]:
-    """
-    Evaluate a greedy policy derived from the Q-table.
-
-    We compute:
-    - mean_reward
-    - mean_steps
-    - success_rate
-    - mean_penalties
-
-    Success definition (robust):
-    - The Taxi environment terminates when a correct drop-off happens.
-    - We also check the terminal reward == +20 as confirmation.
-    """
-    env = gym.make(env_id)
-    rewards, steps_list, penalties_list, successes = [], [], [], []
-
-    for ep in range(episodes):
-        obs, _ = env.reset(seed=seed + 10_000 + ep)
-        done = False
-        ep_reward = 0
-        ep_steps = 0
-        ep_penalties = 0
-        success = False
-
-        for _ in range(max_steps):
-            action = int(np.argmax(Q[obs]))
-            obs, reward, terminated, truncated, _ = env.step(action)
-
-            ep_reward += reward
-            ep_steps += 1
-            if reward == -10:
-                ep_penalties += 1
-
-            if terminated:
-                # terminated usually means successful drop-off in Taxi.
-                # We also verify reward == 20 for clarity.
-                if reward == 20:
-                    success = True
-                done = True
-            if truncated:
-                done = True
-
-            if done:
-                break
-
-        rewards.append(ep_reward)
-        steps_list.append(ep_steps)
-        penalties_list.append(ep_penalties)
-        successes.append(1.0 if success else 0.0)
-
-    env.close()
-
-    return {
-        "eval_mean_reward": float(np.mean(rewards)),
-        "eval_mean_steps": float(np.mean(steps_list)),
-        "eval_success_rate": float(np.mean(successes)),
-        "eval_mean_penalties": float(np.mean(penalties_list)),
-    }
-
-
+# Main Training loop 
 def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int) -> Tuple[EpisodeLog, Dict[str, np.ndarray]]:
-    """
-    Train tabular Q-learning for a single seed.
 
-    Returns:
-    - EpisodeLog (raw log entries)
-    - dict of numpy arrays for key metrics (for plotting / aggregation)
-    """
     env = gym.make(global_cfg.env_id)
     n_states = env.observation_space.n
     n_actions = env.action_space.n
@@ -104,7 +35,6 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
 
     for ep in range(1, q_cfg.episodes + 1):
         eps = linear_epsilon(ep, q_cfg.eps_start, q_cfg.eps_end, q_cfg.eps_decay_episodes)
-
         obs, _ = env.reset(seed=seed + ep)
         ep_reward = 0
         ep_steps = 0
@@ -141,16 +71,6 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
 
             obs = next_obs
 
-        # Periodic evaluation (greedy)
-        eval_metrics = {}
-        if ep % global_cfg.eval_every_episodes == 0:
-            eval_metrics = evaluate_q_table(
-                env_id=global_cfg.env_id,
-                Q=Q,
-                seed=seed,
-                episodes=global_cfg.eval_episodes,
-                max_steps=q_cfg.max_steps_per_episode
-            )
 
         # Log episode
         log.add(
@@ -162,7 +82,6 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
             penalties=ep_penalties,
             success=1.0 if success else 0.0,
             epsilon=eps,
-            **eval_metrics
         )
 
     env.close()
@@ -178,56 +97,39 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
         "epsilon": np.array(d["epsilon"], dtype=float),
     }
 
-    # Optional evaluation arrays (may be missing for non-eval episodes)
-    # We fill missing with NaN to preserve alignment.
-    for k in ["eval_mean_reward", "eval_mean_steps", "eval_success_rate", "eval_mean_penalties"]:
-        if k in d:
-            arr = np.array([v if v is not None else np.nan for v in d[k]], dtype=float)
-            out[k] = arr
-
     return log, out, Q
 
 if __name__ == "__main__":
-    # ============================================================
-    # QUICK CONFIG (edit here, then press Run in VSCode)
-    # ============================================================
+
     SEED = 42
-
-    # If you want a fast test, lower EPISODES (e.g., 300)
-    EPISODES = 2500
-
-    # Set to True to disable periodic evaluation (faster)
-    DISABLE_EVAL = False
-
-    # Where to save quick single-run diagnostic plots
+    EPISODES = 3000
+    DISABLE_EVAL = True
     OUTDIR = "results/q_learning_single"
-    # ============================================================
-
-    import os
-    from utils.plotting import save_single_run_curve
 
     global_cfg = GlobalConfig()
     q_cfg = QLearningConfig()
 
-    # Apply overrides
+    # Overrides
     q_cfg.episodes = EPISODES
     if DISABLE_EVAL:
-        global_cfg.eval_every_episodes = 10**9  # effectively disables evaluation
+        global_cfg.eval_every_episodes = 999999999
 
     # Train
     log, metrics,Q = train_q_learning(global_cfg, q_cfg, seed=SEED)
     np.save(os.path.join(OUTDIR, f"Q_seed{SEED}.npy"), Q)
 
     # Print summary
-    last = -1
     print("\n[Q-LEARNING] Finished.")
     print(f"Seed: {SEED}")
     print(f"Episodes: {q_cfg.episodes}")
 
-    # Save a couple of diagnostic plots (single run)
+
+
+    # Save  plots
     os.makedirs(OUTDIR, exist_ok=True)
     ep = metrics["episode"]
 
+    # Reward
     save_single_run_curve(
         ep, metrics["episode_reward"],
         title="Q-LEARNING (single run) - Reward",
@@ -235,7 +137,8 @@ if __name__ == "__main__":
         outpath=os.path.join(OUTDIR, f"reward_seed{SEED}.png"),
         rolling_window=global_cfg.rolling_window,
     )
-
+    
+    # Penalties
     save_single_run_curve(
         ep, metrics["penalties"],
         title="Q-LEARNING (single run) - Penalties (-10 count)",
@@ -243,7 +146,8 @@ if __name__ == "__main__":
         outpath=os.path.join(OUTDIR, f"penalties_seed{SEED}.png"),
         rolling_window=global_cfg.rolling_window,
     )
-
+    
+    # Steps
     save_single_run_curve(
     ep, metrics["steps"],
     title="Q-LEARNING (single run) - Steps per episode",
@@ -252,6 +156,8 @@ if __name__ == "__main__":
     rolling_window=global_cfg.rolling_window,
     )
 
+    # Success
+    
     save_single_run_curve(
     ep, metrics["success"],
     title="Q-LEARNING (single run) - Success (rolling mean)",

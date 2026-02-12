@@ -1,16 +1,3 @@
-"""
-utils/seeding.py
-
-Reproducibility utilities.
-
-Taxi-v3 is deterministic given a seed, but we also need to control:
-- numpy random
-- python random
-- torch (if used)
-
-We keep this in one place and call it at the start of each run.
-"""
-
 from __future__ import annotations
 
 import random
