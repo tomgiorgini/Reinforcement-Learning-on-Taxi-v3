@@ -85,7 +85,7 @@ if __name__ == "__main__":
         ep_axis, rewards,
         title="TEST (greedy) - Reward per episode",
         xlabel="Test episode", ylabel="Reward",
-        outpath=os.path.join(OUTDIR, "test_reward.png"),
+        outpath=os.path.join(OUTDIR, "test_reward_1000.png"),
         rolling_window=ROLLING
     )
 
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         ep_axis, steps,
         title="TEST (greedy) - Steps per episode",
         xlabel="Test episode", ylabel="Steps",
-        outpath=os.path.join(OUTDIR, "test_steps.png"),
+        outpath=os.path.join(OUTDIR, "test_steps_1000.png"),
         rolling_window=ROLLING
     )
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         ep_axis, penalties,
         title="TEST (greedy) - Penalties per episode (-10 count)",
         xlabel="Test episode", ylabel="Penalties",
-        outpath=os.path.join(OUTDIR, "test_penalties.png"),
+        outpath=os.path.join(OUTDIR, "test_penalties_1000.png"),
         rolling_window=ROLLING
     )
 
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         ep_axis, success,
         title="TEST (greedy) - Success (rolling mean)",
         xlabel="Test episode", ylabel="Success",
-        outpath=os.path.join(OUTDIR, "test_success.png"),
+        outpath=os.path.join(OUTDIR, "test_success_1000.png"),
         rolling_window=ROLLING
     )
 
