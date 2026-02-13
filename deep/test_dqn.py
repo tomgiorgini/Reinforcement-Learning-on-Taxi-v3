@@ -15,10 +15,10 @@ if _PROJECT_ROOT not in sys.path:
 
 from utils.plotting import save_single_run_curve
 
-# DQN module (same used in training)
 from deep.DQN import DQN
 
 
+# Run greedy DQN policy for given episodes and return metrics arrays.
 @torch.no_grad()
 def run_greedy_dqn(
     env_id: str,
@@ -28,10 +28,6 @@ def run_greedy_dqn(
     episodes: int,
     max_steps: int,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Run greedy policy (epsilon=0) from a trained DQN model and return per-episode arrays:
-    rewards, steps, penalties, success
-    """
     env = gym.make(env_id)
 
     rewards = np.zeros(episodes, dtype=float)
@@ -72,7 +68,7 @@ def run_greedy_dqn(
     policy_net.train()
     return rewards, steps, penalties, success
 
-
+# Load a DQN model from the given path and return it ready for evaluation
 def load_dqn_model(
     env_id: str,
     model_path: str,
@@ -80,12 +76,6 @@ def load_dqn_model(
     embedding_dim: int,
     hidden_dim: int,
 ) -> torch.nn.Module:
-    """
-    Build DQN with correct sizes and load state_dict.
-    IMPORTANT: this assumes your DQN signature is:
-      DQN(n_states, n_actions, emb_dim, hidden)
-    (same as in your training script).
-    """
     env = gym.make(env_id)
     n_states = env.observation_space.n
     n_actions = env.action_space.n
@@ -108,22 +98,15 @@ if __name__ == "__main__":
     SEED = 42
     TEST_EPISODES = 1000
     MAX_STEPS = 200
-    ROLLING = 50
+    ROLLING = 20
 
-    # ---- Paths (adapt if needed) ----
-    # If you saved the "best" checkpoint from training:
     MODEL_PATH = "results/train_dqn/dqn_seed42.pth"
-    # Or the final model:
-    # MODEL_PATH = "results/dqn_single/dqn_seed42.pth"
 
     OUTDIR = "results/test_dqn_seed42"
     os.makedirs(OUTDIR, exist_ok=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # ---- IMPORTANT: must match your DQNConfig used during training ----
-    # If your config is the source of truth, you can import DQNConfig and use it here.
-    # Here we keep it explicit like test_q_learning.py.
     EMBEDDING_DIM = 32
     HIDDEN_DIM = 128
 
@@ -139,12 +122,12 @@ if __name__ == "__main__":
         env_id=ENV_ID,
         policy_net=policy_net,
         device=device,
-        seed=SEED + 50_000,   # separate test seed space (same idea as Q-learning test)
+        seed=SEED + 50_000,   # separate test seed space (avoid overlap with training)
         episodes=TEST_EPISODES,
         max_steps=MAX_STEPS,
     )
 
-    # Print summary (same as Q-learning test)
+    # Print summary
     print("\n[DQN TEST]")
     print(f"Model: {MODEL_PATH}")
     print(f"Episodes: {TEST_EPISODES} | seed base: {SEED}")
@@ -154,38 +137,38 @@ if __name__ == "__main__":
     print(f"Mean penalties: {penalties.mean():.2f}")
     print(f"Success rate: {success.mean():.3f}")
 
-    # Plots (4)
+    # Plots
     ep_axis = np.arange(1, TEST_EPISODES + 1)
 
     save_single_run_curve(
         ep_axis, rewards,
-        title="TEST (greedy) - Reward per episode",
+        title="Greedy TEST - Reward per episode (1000)",
         xlabel="Test episode", ylabel="Reward",
-        outpath=os.path.join(OUTDIR, "test_reward.png"),
+        outpath=os.path.join(OUTDIR, "test_reward_1000.png"),
         rolling_window=ROLLING,
     )
 
     save_single_run_curve(
         ep_axis, steps,
-        title="TEST (greedy) - Steps per episode",
+        title="Greedy TEST - Steps per episode (1000)",
         xlabel="Test episode", ylabel="Steps",
-        outpath=os.path.join(OUTDIR, "test_steps.png"),
+        outpath=os.path.join(OUTDIR, "test_steps_1000.png"),
         rolling_window=ROLLING,
     )
 
     save_single_run_curve(
         ep_axis, penalties,
-        title="TEST (greedy) - Penalties per episode (-10 count)",
+        title="Greedy TEST - Penalties per episode (1000)",
         xlabel="Test episode", ylabel="Penalties",
-        outpath=os.path.join(OUTDIR, "test_penalties.png"),
+        outpath=os.path.join(OUTDIR, "test_penalties_1000.png"),
         rolling_window=ROLLING,
     )
 
     save_single_run_curve(
         ep_axis, success,
-        title="TEST (greedy) - Success (rolling mean)",
+        title="Greedy TEST - Success per episode (1000)",
         xlabel="Test episode", ylabel="Success",
-        outpath=os.path.join(OUTDIR, "test_success.png"),
+        outpath=os.path.join(OUTDIR, "test_success_1000.png"),
         rolling_window=ROLLING,
     )
 

@@ -20,13 +20,14 @@ if _PROJECT_ROOT not in sys.path:
 from utils.plotting import rolling_mean
 from utils.logging import EpisodeLog
 from config import GlobalConfig, DQNConfig
+from utils.plotting import save_rolling_means
 
 # DQN module
 from deep.DQN import DQN
 
 Transition = namedtuple("Transition", ("state", "action", "reward", "next_state", "done"))
 
-
+# Set random seeds for reproducibility
 def set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -34,7 +35,7 @@ def set_seed(seed: int) -> None:
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-
+# Linear epsilon decay schedule 
 def linear_epsilon_by_step(step: int, eps_start: float, eps_end: float, decay_steps: int) -> float:
     if decay_steps <= 0:
         return eps_end
@@ -42,6 +43,7 @@ def linear_epsilon_by_step(step: int, eps_start: float, eps_end: float, decay_st
     return eps_start + frac * (eps_end - eps_start)
 
 
+# Replay buffer for DQN (stores transitions and samples batches for learning)
 class ReplayBuffer:
     def __init__(self, capacity: int, seed: int):
         self.buffer = deque(maxlen=capacity)
@@ -57,7 +59,7 @@ class ReplayBuffer:
         batch = self.rng.sample(self.buffer, batch_size)
         return Transition(*zip(*batch))
 
-
+# Main training loop for DQN
 def train_dqn(
     global_cfg: GlobalConfig,
     dqn_cfg: DQNConfig,
@@ -73,6 +75,7 @@ def train_dqn(
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # initialize policy and target networks
     policy_net = DQN(
         n_states=n_states,
         n_actions=n_actions,
@@ -96,7 +99,6 @@ def train_dqn(
     log = EpisodeLog()
     global_step = 0
 
-    # ---- progress settings ----
     progress_every = 100  # print training rolling averages every 100 episodes
 
     if outdir is not None:
@@ -110,7 +112,7 @@ def train_dqn(
         ep_penalties = 0
         success = False
 
-        # epsilon logged as the FINAL epsilon reached in the episode
+        # epsilon logged as the final epsilon reached in the episode
         eps = linear_epsilon_by_step(global_step, dqn_cfg.eps_start, dqn_cfg.eps_end, dqn_cfg.eps_decay_steps)
 
         for _ in range(dqn_cfg.max_steps_per_episode):
@@ -183,7 +185,7 @@ def train_dqn(
             epsilon=eps,
         )
 
-        # ---- Progress print every 100 episodes: print ONLY training rolling averages of the 4 metrics ----
+        # print progress every 100 episodes 
         if ep % progress_every == 0:
             d = log.as_dict_of_lists()
             w = progress_every
@@ -201,7 +203,7 @@ def train_dqn(
 
     env.close()
 
-    # arrays for plotting (same schema as Q-learning)
+    # arrays for plotting 
     d = log.as_dict_of_lists()
     out = {
         "episode": np.array(d["episode"], dtype=int),
@@ -212,7 +214,7 @@ def train_dqn(
         "epsilon": np.array(d["epsilon"], dtype=float),
     }
 
-    # Save ONLY the final model here (last episode)
+    # Save the final model (last episode)
     if outdir is not None:
         final_path = os.path.join(outdir, f"dqn_seed{seed}.pth")
         torch.save(policy_net.state_dict(), final_path)
@@ -229,23 +231,18 @@ if __name__ == "__main__":
     global_cfg = GlobalConfig()
     dqn_cfg = DQNConfig()
 
-    # overrides
+    # overrides 
     dqn_cfg.episodes = EPISODES
 
     print("torch.cuda.is_available() =", torch.cuda.is_available())
     print("device =", "cuda" if torch.cuda.is_available() else "cpu")
 
-    # train (this will save the final model at the end)
+    # train
     log, metrics, policy_net = train_dqn(global_cfg, dqn_cfg, seed=SEED, outdir=OUTDIR)
 
     print("\n[DQN] Finished.")
-    print(f"Seed: {SEED}")
-    print(f"Episodes: {dqn_cfg.episodes}")
-    print(f"Artifacts dir: {OUTDIR}")
 
-    # -------------------------
-# Setup for plots (raw + rolling) + zoom mask
-# -------------------------
+
     ep = metrics["episode"]
     w = global_cfg.rolling_window
 
@@ -265,9 +262,7 @@ if __name__ == "__main__":
     m = (ep >= 1000) & (ep <= 3000)
 
 
-    # -------------------------
-    # FULL (0–3000) — raw + rolling mean
-    # -------------------------
+    # full range plots
     plt.figure(figsize=(6, 4))
     plt.plot(ep, reward_raw, linewidth=1.0, alpha=0.35, label="raw")
     plt.plot(ep, reward_sm,  linewidth=2.0, label=f"rolling mean (w={w})")
@@ -305,9 +300,7 @@ if __name__ == "__main__":
     plt.close()
 
 
-    # -------------------------
-    # ZOOM (1000–3000) — raw + rolling mean (4 plot separati)
-    # -------------------------
+   # zoomed-in plots (1000–3000)
     plt.figure(figsize=(6, 4))
     plt.plot(ep[m], reward_raw[m], linewidth=1.0, alpha=0.35, label="raw")
     plt.plot(ep[m], reward_sm[m],  linewidth=2.0, label=f"rolling mean (w={w})")
@@ -343,4 +336,16 @@ if __name__ == "__main__":
     plt.xlim(1000, 3000); plt.grid(True, alpha=0.3); plt.legend()
     plt.savefig(os.path.join(OUTDIR, "success_zoom.png"), dpi=150)
     plt.close()
+    
+    save_rolling_means(
+    outdir=OUTDIR,
+    episode=ep,
+    reward=metrics["episode_reward"],
+    steps=metrics["steps"],
+    penalties=metrics["penalties"],
+    success=metrics["success"],
+    w=w,
+    tag="dqn_train",
+    )
+    
     print(f"Plots saved in: {OUTDIR}\n")

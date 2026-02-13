@@ -14,7 +14,9 @@ if _PROJECT_ROOT not in sys.path:
 from config import QLearningConfig, GlobalConfig
 from utils.logging import EpisodeLog
 from utils.plotting import rolling_mean
+from utils.plotting import save_rolling_means
 
+# epsilon decay (linear)
 def linear_epsilon(episode: int, eps_start: float, eps_end: float, decay_episodes: int) -> float:
     if decay_episodes <= 0:
         return eps_end
@@ -22,6 +24,7 @@ def linear_epsilon(episode: int, eps_start: float, eps_end: float, decay_episode
     return eps_start + frac * (eps_end - eps_start)
 
 
+# Q-learning training loop
 def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int):
     env = gym.make(global_cfg.env_id)
     n_states = env.observation_space.n
@@ -120,6 +123,7 @@ if __name__ == "__main__":
     # mask zoom
     m = (ep >= 1000) & (ep <= 3000)
 
+    # full range plots
 
     plt.figure(figsize=(6, 4))
     plt.plot(ep, reward_raw, linewidth=1.0, alpha=0.35, label="raw")
@@ -157,9 +161,8 @@ if __name__ == "__main__":
     plt.savefig(os.path.join(OUTDIR, f"success_full.png"), dpi=150)
     plt.close()
 
-    # -------------------------
-    # ZOOM (1000–3000) — 4 plot separati
-    # -------------------------
+    # zoomed plots
+    
     plt.figure(figsize=(6, 4))
     plt.plot(ep[m], reward_raw[m], linewidth=1.0, alpha=0.35, label="raw")
     plt.plot(ep[m], reward_sm[m],  linewidth=2.0, label=f"rolling mean (w={w})")
@@ -195,5 +198,16 @@ if __name__ == "__main__":
     plt.xlim(1000, 3000); plt.grid(True, alpha=0.3); plt.legend()
     plt.savefig(os.path.join(OUTDIR, f"success_zoom.png"), dpi=150)
     plt.close()
+    
+    save_rolling_means(
+    outdir=OUTDIR,
+    episode=ep,
+    reward=metrics["episode_reward"],
+    steps=metrics["steps"],
+    penalties=metrics["penalties"],
+    success=metrics["success"],
+    w=w,
+    tag="q_learn_train",
+    )
 
-    print(f"[Q-LEARNING] Done. Plots saved in: {OUTDIR}")
+    print(f"[Q-LEARNING] Done.")

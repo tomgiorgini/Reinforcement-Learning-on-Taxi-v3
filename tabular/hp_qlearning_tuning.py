@@ -1,18 +1,3 @@
-"""
-tabular/hp_qlearning_tuning.py
-
-Very simple hyperparameter tuning for tabular Q-learning on Taxi-v3.
-
-Constraints:
-- single seed = 42
-- training episodes = 1000  (change here if you want)
-- minimal grid search
-- prints every run + prints the best configuration at the end
-
-Run:
-  python tabular/hp_qlearning_tuning.py
-"""
-
 from __future__ import annotations
 
 from dataclasses import replace
@@ -31,23 +16,13 @@ from tabular.train_q_learning import train_q_learning, evaluate_q_table
 
 
 def score(eval_success: float, eval_reward: float, eval_steps: float, eval_penalties: float) -> float:
-    """
-    Single scalar score used to rank configs.
-
-    In Taxi-v3, success rate is the most important.
-    Then reward, then (light) penalties for long episodes and illegal actions.
-    """
     return 200.0 * eval_success + 1.0 * eval_reward - 0.25 * eval_steps - 2.0 * eval_penalties
 
 
 def main():
-    # =============================
-    # Fixed tuning settings
-    # =============================
     SEED = 42
     TRAIN_EPISODES = 1500
     EVAL_EPISODES = 100  # greedy eval episodes after training
-    # =============================
 
     set_global_seeds(SEED)
 
@@ -56,10 +31,9 @@ def main():
     base_cfg = QLearningConfig()
     base_cfg.episodes = TRAIN_EPISODES
 
-    # =============================
-    # Small grid (Taxi-v3 sensible)
-    # =============================
-  
+
+    # gird search space
+    
     # Learning rate
     alphas = [0.10, 0.30, 0.50, 0.70]
 
@@ -69,14 +43,14 @@ def main():
     # Final exploration
     eps_ends = [0.01, 0.05, 0.10]
 
-    # Decay length (episodes)
+    # Decay length 
     decays = [500, 1000, 1500]
-    # =============================
+
 
     total = len(alphas) * len(gammas) * len(eps_ends) * len(decays)
     run_id = 0
 
-    best = None  # (best_score, overrides_dict, eval_dict)
+    best = None 
 
     for alpha, gamma, eps_end, decay in product(alphas, gammas, eps_ends, decays):
         run_id += 1
@@ -89,10 +63,9 @@ def main():
             eps_decay_episodes=decay,
         )
 
-        # Train (we don't depend on out["eval_*"] anymore)
         _, out, Q = train_q_learning(global_cfg, cfg, seed=SEED)
 
-        # Explicit greedy evaluation AFTER training (robust)
+        # Explicit greedy evaluation after training 
         eval_metrics = evaluate_q_table(
             env_id=global_cfg.env_id,
             Q=Q,

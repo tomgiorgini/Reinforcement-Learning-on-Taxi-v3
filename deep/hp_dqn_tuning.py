@@ -20,12 +20,10 @@ from test_dqn import run_greedy_dqn
 
 
 def score(success: float, reward: float, steps: float, penalties: float) -> float:
-    # Taxi-v3: success first, then reward; penalize steps and penalties
     return 200.0 * success + 1.0 * reward - 0.25 * steps - 2.0 * penalties
 
 
 def clone_cfg(base: DQNConfig) -> DQNConfig:
-    # robust clone even if DQNConfig is a dataclass or plain class
     cfg = DQNConfig()
     if hasattr(base, "__dict__") and hasattr(cfg, "__dict__"):
         cfg.__dict__.update(base.__dict__)
@@ -52,16 +50,7 @@ def main() -> None:
     print("torch.cuda.is_available() =", torch.cuda.is_available())
     print("device =", device)
 
-    # =========================================================
-    # Grid inspired by Report (DQN hyperparameter tuning section)
-    # lr: 0.001 / 0.0001 / 0.00001
-    # batch: 64 / 128
-    # target update: 1000 / 2000 (+ 3000 to get ~50 runs)
-    # decay modes:
-    #   - fixed epsilon 0.1
-    #   - linear-by-step reaching eps_end at final training steps ("full")
-    #   - linear-by-step reaching eps_end at half training steps ("half")
-    # =========================================================
+    # Hyperparameter search space
     lrs = [1e-3, 1e-4, 1e-5]
     batch_sizes = [64, 128]
     target_updates = [1000, 2000, 3000]
@@ -89,8 +78,7 @@ def main() -> None:
         set_attr_if_exists(cfg, "batch_size", bs)
         set_attr_if_exists(cfg, "target_update_every_steps", tgt)
 
-        # ---- decay handling (step-based in your train_dqn.py) ----
-        # total training steps = episodes * max_steps_per_episode
+        # compute decay steps based on total training steps
         max_steps = getattr(cfg, "max_steps_per_episode", 200)
         total_steps = int(TRAIN_EPISODES * max_steps)
 

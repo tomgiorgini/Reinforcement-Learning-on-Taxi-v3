@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, Sequence, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def rolling_mean(x, window):
@@ -46,3 +47,23 @@ def save_single_run_curve(
     plt.tight_layout()
     plt.savefig(outpath, dpi=200)
     plt.close()
+    
+    
+def save_rolling_means(outdir: str, episode, reward, steps, penalties, success, w: int, tag: str):
+    os.makedirs(outdir, exist_ok=True)
+
+    ep = np.asarray(episode, dtype=int)
+    reward = np.asarray(reward, dtype=float)
+    steps = np.asarray(steps, dtype=float)
+    penalties = np.asarray(penalties, dtype=float)
+    success = np.asarray(success, dtype=float)
+
+    reward_rm = rolling_mean(reward, w)
+    steps_rm = rolling_mean(steps, w)
+    penalties_rm = rolling_mean(penalties, w)
+    success_rm = rolling_mean(success, w)
+
+    csv_path = os.path.join(outdir, f"{tag}_rolling_means.csv")
+    header = "episode,reward_rm,steps_rm,penalties_rm,success_rm"
+    data = np.column_stack([ep, reward_rm, steps_rm, penalties_rm, success_rm])
+    np.savetxt(csv_path, data, delimiter=",", header=header, comments="")

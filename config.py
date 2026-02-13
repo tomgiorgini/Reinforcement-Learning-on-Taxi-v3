@@ -4,10 +4,8 @@ from dataclasses import dataclass
 
 @dataclass
 class GlobalConfig:
-    # Gymnasium environment id
+    #env id
     env_id: str = "Taxi-v3"
-
-    # Generic plotting smoothing
     rolling_window: int = 50
 
 
@@ -21,7 +19,7 @@ class QLearningConfig:
     alpha: float = 0.3
     gamma: float = 0.9
 
-    # Exploration (linear decay)
+    # Linear decay
     eps_start: float = 1.0
     eps_end: float = 0.05
     eps_decay_episodes: int = 2000
@@ -36,10 +34,10 @@ class DQNConfig:
     # Discount
     gamma: float = 0.99
 
-    # Epsilon-greedy schedule (linear decay over steps)
+    # Linear decay
     eps_start: float = 1.0
     eps_end: float = 0.05
-    eps_decay_steps: int = 80_000  # total environment steps until eps_end
+    eps_decay_steps: int = 80_000  #environment steps until eps_end
 
     # Replay buffer
     replay_capacity: int = 50_000
