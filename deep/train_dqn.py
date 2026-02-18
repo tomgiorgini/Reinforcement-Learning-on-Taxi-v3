@@ -2,9 +2,6 @@ from __future__ import annotations
 from typing import Dict, Tuple
 import os
 import sys
-import random
-from collections import deque, namedtuple
-
 import numpy as np
 import gymnasium as gym
 import torch
@@ -17,47 +14,16 @@ _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from utils.plotting import rolling_mean
-from utils.logging import EpisodeLog
+from utils import rolling_mean
+from utils import EpisodeLog
 from config import GlobalConfig, DQNConfig
-from utils.plotting import save_rolling_means
-
+from utils import save_rolling_means
+from utils import set_global_seeds
+from utils import linear_epsilon_by_step
 # DQN module
 from deep.DQN import DQN
+from deep.DQN import ReplayBuffer
 
-Transition = namedtuple("Transition", ("state", "action", "reward", "next_state", "done"))
-
-# Set random seeds for reproducibility
-def set_seed(seed: int) -> None:
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-
-# Linear epsilon decay schedule 
-def linear_epsilon_by_step(step: int, eps_start: float, eps_end: float, decay_steps: int) -> float:
-    if decay_steps <= 0:
-        return eps_end
-    frac = min(1.0, step / decay_steps)
-    return eps_start + frac * (eps_end - eps_start)
-
-
-# Replay buffer for DQN (stores transitions and samples batches for learning)
-class ReplayBuffer:
-    def __init__(self, capacity: int, seed: int):
-        self.buffer = deque(maxlen=capacity)
-        self.rng = random.Random(seed)
-
-    def __len__(self) -> int:
-        return len(self.buffer)
-
-    def push(self, s: int, a: int, r: float, s2: int, done: bool) -> None:
-        self.buffer.append(Transition(s, a, r, s2, done))
-
-    def sample(self, batch_size: int) -> Transition:
-        batch = self.rng.sample(self.buffer, batch_size)
-        return Transition(*zip(*batch))
 
 # Main training loop for DQN
 def train_dqn(
@@ -66,7 +32,8 @@ def train_dqn(
     seed: int,
     outdir: str | None = None,
 ) -> Tuple[EpisodeLog, Dict[str, np.ndarray], torch.nn.Module]:
-    set_seed(seed)
+    
+    set_global_seeds(seed)
 
     env = gym.make(global_cfg.env_id)
     n_states = env.observation_space.n

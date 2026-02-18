@@ -8,11 +8,11 @@ _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from utils.plotting import save_single_run_curve
+from utils import save_single_run_curve
 
 
 def run_greedy_q_table(env_id: str, Q: np.ndarray, seed: int, episodes: int, max_steps: int):
-    #Run greedy policy from Q-table and return per-episode metrics arrays
+    #Run greedy policy from Q-table and return episode metrics
     env = gym.make(env_id)
 
     rewards = np.zeros(episodes, dtype=float)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     Q_PATH = "results/train_q_learning/Q_seed42.npy"
     OUTDIR = "results/test_q_learning_seed42"
-    ROLLING = 200
+    ROLLING = 50
 
     os.makedirs(OUTDIR, exist_ok=True)
 

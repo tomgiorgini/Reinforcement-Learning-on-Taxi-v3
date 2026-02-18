@@ -12,17 +12,10 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 from config import QLearningConfig, GlobalConfig
-from utils.logging import EpisodeLog
-from utils.plotting import rolling_mean
-from utils.plotting import save_rolling_means
-
-# epsilon decay (linear)
-def linear_epsilon(episode: int, eps_start: float, eps_end: float, decay_episodes: int) -> float:
-    if decay_episodes <= 0:
-        return eps_end
-    frac = min(1.0, episode / decay_episodes)
-    return eps_start + frac * (eps_end - eps_start)
-
+from utils import EpisodeLog
+from utils import rolling_mean
+from utils import save_rolling_means
+from utils import linear_epsilon
 
 # Q-learning training loop
 def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int):

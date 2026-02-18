@@ -1,11 +1,24 @@
 from __future__ import annotations
-
-from typing import Optional, Sequence, Tuple
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
+import torch
+import random
 import numpy as np
+from typing import Optional, Sequence, Tuple
 import matplotlib.pyplot as plt
 import os
 
 
+# seeding
+def set_global_seeds(seed: int) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+# for plotting
 def rolling_mean(x, window):
     # for t < window: average over x[0:t]
     #for t >= window: average over last `window` points
@@ -21,6 +34,7 @@ def rolling_mean(x, window):
     return out
 
 
+# plot test results
 def save_single_run_curve(
     x: Sequence[float],
     y: Sequence[float],
@@ -48,7 +62,7 @@ def save_single_run_curve(
     plt.savefig(outpath, dpi=200)
     plt.close()
     
-    
+# for comparing dqn to q-learning rolling averages    
 def save_rolling_means(outdir: str, episode, reward, steps, penalties, success, w: int, tag: str):
     os.makedirs(outdir, exist_ok=True)
 
@@ -67,3 +81,39 @@ def save_rolling_means(outdir: str, episode, reward, steps, penalties, success, 
     header = "episode,reward_rm,steps_rm,penalties_rm,success_rm"
     data = np.column_stack([ep, reward_rm, steps_rm, penalties_rm, success_rm])
     np.savetxt(csv_path, data, delimiter=",", header=header, comments="")
+    
+    
+# logging episodes
+@dataclass
+class EpisodeLog:
+    entries: List[Dict[str, Any]] = field(default_factory=list)
+
+    def add(self, **kwargs: Any) -> None:
+        self.entries.append(dict(kwargs))
+
+    def as_dict_of_lists(self) -> Dict[str, List[Any]]:
+        # Convert list-of-dicts to dict-of-lists for plotting.
+        out: Dict[str, List[Any]] = {}
+        for row in self.entries:
+            for k, v in row.items():
+                out.setdefault(k, []).append(v)
+        return out
+    
+    
+# Linear epsilon decay by episode (for Q-learning)
+def linear_epsilon(episode: int, eps_start: float, eps_end: float, decay_episodes: int) -> float:
+    if decay_episodes <= 0:
+        return eps_end
+    frac = min(1.0, episode / decay_episodes)
+    return eps_start + frac * (eps_end - eps_start)
+
+# Linear epsilon decay by steps (for DQN)
+def linear_epsilon_by_step(step: int, eps_start: float, eps_end: float, decay_steps: int) -> float:
+    if decay_steps <= 0:
+        return eps_end
+    frac = min(1.0, step / decay_steps)
+    return eps_start + frac * (eps_end - eps_start)
+
+# scoring function for hyperparameter tuning
+def score(eval_success: float, eval_reward: float, eval_steps: float, eval_penalties: float) -> float:
+    return 20 * eval_success + 1.0 * eval_reward - 1 * eval_steps - 10 * eval_penalties

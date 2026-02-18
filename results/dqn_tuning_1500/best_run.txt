@@ -1,0 +1,1 @@
+{'lr': 0.001, 'batch_size': 64, 'target_update_every_steps': 1000, 'gamma': 0.95, 'eval_success': 1.0, 'eval_reward': 8.01, 'eval_steps': 12.99, 'eval_penalties': 0.0}

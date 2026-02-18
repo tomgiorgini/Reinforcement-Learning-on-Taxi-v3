@@ -11,12 +11,27 @@ if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
 from config import GlobalConfig, QLearningConfig
-from utils.seeding import set_global_seeds
-from tabular.train_q_learning import train_q_learning, evaluate_q_table
+from utils import set_global_seeds
+from utils import score
+from tabular.train_q_learning import train_q_learning
+from test_q_learning import run_greedy_q_table
 
 
-def score(eval_success: float, eval_reward: float, eval_steps: float, eval_penalties: float) -> float:
-    return 200.0 * eval_success + 1.0 * eval_reward - 0.25 * eval_steps - 2.0 * eval_penalties
+def evaluate_q_table(env_id: str, Q, seed: int, episodes: int, max_steps: int) -> dict:
+    rewards, steps, penalties, success = run_greedy_q_table(
+        env_id=env_id,
+        Q=Q,
+        seed=seed,
+        episodes=episodes,
+        max_steps=max_steps,
+    )
+
+    return {
+        "eval_mean_reward": float(rewards.mean()),
+        "eval_mean_steps": float(steps.mean()),
+        "eval_mean_penalties": float(penalties.mean()),
+        "eval_success_rate": float(success.mean()),
+    }
 
 
 def main():
@@ -31,26 +46,15 @@ def main():
     base_cfg = QLearningConfig()
     base_cfg.episodes = TRAIN_EPISODES
 
-
-    # gird search space
-    
-    # Learning rate
-    alphas = [0.10, 0.30, 0.50, 0.70]
-
-    # Discount
-    gammas = [0.90, 0.95, 0.99]
-
-    # Final exploration
-    eps_ends = [0.01, 0.05, 0.10]
-
-    # Decay length 
-    decays = [500, 1000, 1500]
-
+    # grid search space
+    alphas = [0.10, 0.30, 0.50, 0.70]      # learning rate
+    gammas = [0.90, 0.95, 0.99]            # discount
+    eps_ends = [0.01, 0.05, 0.10]          # final exploration
+    decays = [500, 1000, 1500]             # decay length (episodes)
 
     total = len(alphas) * len(gammas) * len(eps_ends) * len(decays)
     run_id = 0
-
-    best = None 
+    best = None
 
     for alpha, gamma, eps_end, decay in product(alphas, gammas, eps_ends, decays):
         run_id += 1
@@ -63,15 +67,17 @@ def main():
             eps_decay_episodes=decay,
         )
 
+        # Train
         _, out, Q = train_q_learning(global_cfg, cfg, seed=SEED)
 
-        # Explicit greedy evaluation after training 
+        # Greedy evaluation after training 
+        max_steps = getattr(cfg, "max_steps_per_episode", 200)
         eval_metrics = evaluate_q_table(
             env_id=global_cfg.env_id,
             Q=Q,
-            seed=SEED + 50_000,                # separate eval seed stream
+            seed=SEED + 50_000,     # separate eval seed stream
             episodes=EVAL_EPISODES,
-            max_steps=cfg.max_steps_per_episode
+            max_steps=max_steps,
         )
 
         eval_reward = float(eval_metrics["eval_mean_reward"])
@@ -94,12 +100,11 @@ def main():
 
     best_score, best_overrides, best_eval = best
 
-    print("\n================ BEST CONFIG ================")
+    print("\nBEST CONFIG")
     print(f"Seed: {SEED} | Train episodes: {TRAIN_EPISODES} | Eval episodes: {EVAL_EPISODES}")
     print("Overrides:", best_overrides)
     print("Eval:", best_eval)
     print("Score:", best_score)
-
 
 if __name__ == "__main__":
     main()
