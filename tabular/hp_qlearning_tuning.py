@@ -17,6 +17,8 @@ from tabular.train_q_learning import train_q_learning
 from test_q_learning import run_greedy_q_table
 
 
+# evaluate the learned Q-table with a greedy policy and log metrics
+# using previously defined run_greedy_q_tablefor evaluating episodes
 def evaluate_q_table(env_id: str, Q, seed: int, episodes: int, max_steps: int) -> dict:
     rewards, steps, penalties, success = run_greedy_q_table(
         env_id=env_id,
@@ -35,6 +37,7 @@ def evaluate_q_table(env_id: str, Q, seed: int, episodes: int, max_steps: int) -
 
 
 def main():
+    # Configurations
     SEED = 42
     TRAIN_EPISODES = 1500
     EVAL_EPISODES = 100  # greedy eval episodes after training
@@ -56,9 +59,11 @@ def main():
     run_id = 0
     best = None
 
+    # main grid search loop over hyperparameters
     for alpha, gamma, eps_end, decay in product(alphas, gammas, eps_ends, decays):
         run_id += 1
 
+        # Create config for this run by overriding base config with current hyperparameters
         cfg = replace(
             base_cfg,
             alpha=alpha,
@@ -85,18 +90,16 @@ def main():
         eval_success = float(eval_metrics["eval_success_rate"])
         eval_penalties = float(eval_metrics["eval_mean_penalties"])
 
+        # Compute overall score for this run based on evaluation metrics
         s = score(eval_success, eval_reward, eval_steps, eval_penalties)
 
         overrides = {"alpha": alpha, "gamma": gamma, "eps_end": eps_end, "eps_decay_episodes": decay}
 
+        # Track best run based on score
         if best is None or s > best[0]:
             best = (s, overrides, eval_metrics)
 
-        print(
-            f"[{run_id}/{total}] alpha={alpha} gamma={gamma} eps_end={eps_end} decay={decay} "
-            f"=> success={eval_success:.2f} reward={eval_reward:.1f} steps={eval_steps:.1f} pens={eval_penalties:.1f} "
-            f"score={s:.2f}"
-        )
+        print(f"[{run_id}/{total}] a={alpha} g={gamma} eps={eps_end} d={decay} -> score={s:.2f}")
 
     best_score, best_overrides, best_eval = best
 

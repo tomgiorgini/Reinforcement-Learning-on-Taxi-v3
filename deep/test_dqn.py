@@ -28,6 +28,8 @@ def run_greedy_dqn(
     episodes: int,
     max_steps: int,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    
+    # Create environment
     env = gym.make(env_id)
 
     rewards = np.zeros(episodes, dtype=float)
@@ -35,20 +37,25 @@ def run_greedy_dqn(
     penalties = np.zeros(episodes, dtype=int)
     success = np.zeros(episodes, dtype=float)
 
+    # policy in evaluation mode 
     policy_net.eval()
 
     for ep in range(episodes):
+        # reset environment with test seed
         obs, _ = env.reset(seed=seed + ep)
 
         ep_r, ep_steps, ep_pen = 0.0, 0, 0
         ok = 0.0
 
         for _ in range(max_steps):
+            # convert obs to tensor 
             st = torch.tensor([obs], dtype=torch.long, device=device)
+            # select action greedily from policy_net
             action = int(policy_net(st).argmax(dim=1).item())
 
             obs, r, terminated, truncated, _ = env.step(action)
 
+            # update episode metrics
             ep_r += float(r)
             ep_steps += 1
             if r == -10:
@@ -76,6 +83,7 @@ def load_dqn_model(
     embedding_dim: int,
     hidden_dim: int,
 ) -> torch.nn.Module:
+    # Create a DQN model with the same architecture used for training
     env = gym.make(env_id)
     n_states = env.observation_space.n
     n_actions = env.action_space.n
@@ -87,7 +95,7 @@ def load_dqn_model(
         emb_dim=embedding_dim,
         hidden=hidden_dim,
     ).to(device)
-
+    # Load the saved state dict into the model
     state = torch.load(model_path, map_location=device)
     model.load_state_dict(state)
     return model
@@ -102,7 +110,7 @@ if __name__ == "__main__":
 
     MODEL_PATH = "results/train_dqn/dqn_seed42.pth"
 
-    OUTDIR = "results/test_dqn_seed42"
+    OUTDIR = "results/test_dqn"
     os.makedirs(OUTDIR, exist_ok=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

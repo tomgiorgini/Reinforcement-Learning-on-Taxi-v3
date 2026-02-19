@@ -10,25 +10,29 @@ if _PROJECT_ROOT not in sys.path:
 
 from utils import save_single_run_curve
 
-
+# Run a greedy policy using the learned Q-table and log metrics.
 def run_greedy_q_table(env_id: str, Q: np.ndarray, seed: int, episodes: int, max_steps: int):
-    #Run greedy policy from Q-table and return episode metrics
+    # Create environment
     env = gym.make(env_id)
 
+    # init arrays for logging
     rewards = np.zeros(episodes, dtype=float)
     steps = np.zeros(episodes, dtype=int)
     penalties = np.zeros(episodes, dtype=int)
     success = np.zeros(episodes, dtype=float)
 
+    # Run episodes
     for ep in range(episodes):
         obs, _ = env.reset(seed=seed + ep)
         ep_r, ep_steps, ep_pen = 0.0, 0, 0
         ok = 0.0
 
+        # Run episode with greedy policy
         for _ in range(max_steps):
             action = int(np.argmax(Q[obs]))
             obs, r, terminated, truncated, _ = env.step(action)
 
+            # Log metrics
             ep_r += float(r)
             ep_steps += 1
             if r == -10:
@@ -49,19 +53,22 @@ def run_greedy_q_table(env_id: str, Q: np.ndarray, seed: int, episodes: int, max
 
 
 if __name__ == "__main__":
+    # Configurations
     ENV_ID = "Taxi-v3"
     SEED = 42
     TEST_EPISODES = 1000
     MAX_STEPS = 200
 
     Q_PATH = "results/train_q_learning/Q_seed42.npy"
-    OUTDIR = "results/test_q_learning_seed42"
+    OUTDIR = "results/test_q_learning"
     ROLLING = 200
 
     os.makedirs(OUTDIR, exist_ok=True)
 
+    # Load learned Q-table from training
     Q = np.load(Q_PATH)
 
+    # Run greedy policy and log metrics
     rewards, steps, penalties, success = run_greedy_q_table(
         env_id=ENV_ID,
         Q=Q,
@@ -78,7 +85,7 @@ if __name__ == "__main__":
     print(f"Mean penalties: {penalties.mean():.2f}")
     print(f"Success rate: {success.mean():.3f}")
 
-    # Plots (4)
+    # Plots 
     ep_axis = np.arange(1, TEST_EPISODES + 1)
 
     save_single_run_curve(

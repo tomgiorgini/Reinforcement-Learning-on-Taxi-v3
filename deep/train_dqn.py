@@ -33,16 +33,19 @@ def train_dqn(
     outdir: str | None = None,
 ) -> Tuple[EpisodeLog, Dict[str, np.ndarray], torch.nn.Module]:
     
+    # seeding
     set_global_seeds(seed)
 
+    # create environment and get dimensions
     env = gym.make(global_cfg.env_id)
     n_states = env.observation_space.n
     n_actions = env.action_space.n
     env.action_space.seed(seed)
 
+    # use GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # initialize policy network, optimizer, replay buffer, and logging
+    # initialize policy network
     policy_net = DQN(
         n_states=n_states,
         n_actions=n_actions,
@@ -50,20 +53,25 @@ def train_dqn(
         hidden=dqn_cfg.hidden_dim,
     ).to(device)
 
+    # optimizer and replay buffer 
     optimizer = optim.Adam(policy_net.parameters(), lr=dqn_cfg.lr)
     replay = ReplayBuffer(capacity=dqn_cfg.replay_capacity, seed=seed)
 
     log = EpisodeLog()
     global_step = 0
 
-    progress_every = 100  # print training rolling averages every 100 episodes
+    progress_every = 500 # print training rolling averages every n episodes
 
     if outdir is not None:
         os.makedirs(outdir, exist_ok=True)
 
-    # training loop
+    # Main training loop
     for ep in range(1, dqn_cfg.episodes + 1):
+
+        # compute epsilon for this episode
         eps = linear_epsilon(ep, dqn_cfg.eps_start, dqn_cfg.eps_end, dqn_cfg.eps_decay_episodes)
+
+        # reset environment at the start of each episode
         obs, _ = env.reset(seed=seed + ep)
 
         ep_reward = 0.0
@@ -71,9 +79,11 @@ def train_dqn(
         ep_penalties = 0
         success = False
 
+        # episode loop
         for _ in range(dqn_cfg.max_steps_per_episode):
             global_step += 1
-        
+
+            # epsilon-greedy action selection
             if np.random.rand() < eps:
                 action = env.action_space.sample()
             else:
@@ -87,7 +97,7 @@ def train_dqn(
             # store transition
             replay.push(obs, action, float(reward), next_obs, bool(done))
 
-            # metrics
+            # metrics and termination conditions
             ep_reward += float(reward)
             ep_steps += 1
             if float(reward) == -10.0:
@@ -95,28 +105,39 @@ def train_dqn(
             if terminated and float(reward) == 20.0:
                 success = True
 
-            # learn
+            # learning step (if enough data (>= 2000) and every 2 episodes)
             if len(replay) >= dqn_cfg.learning_starts and (global_step % dqn_cfg.train_every_episodes == 0):
+
+                # sample a batch of transitions from the replay buffer
                 batch = replay.sample(dqn_cfg.batch_size)
 
+                # convert batch to tensors
                 s = torch.tensor(batch.state, dtype=torch.long, device=device)
                 a = torch.tensor(batch.action, dtype=torch.long, device=device).unsqueeze(1)
                 r = torch.tensor(batch.reward, dtype=torch.float32, device=device).unsqueeze(1)
                 s2 = torch.tensor(batch.next_state, dtype=torch.long, device=device)
                 d = torch.tensor(batch.done, dtype=torch.float32, device=device).unsqueeze(1)
 
-                # gather Q(s,a)
+                # policy_net(s) returns Q-values for all actions: shape (B, A).
+                # gather(1, a) selects for each transition i the Q-value of the action taken a[i]
+                # producing q_sa with shape (B, 1) = Q(s_i, a_i)
                 q_sa = policy_net(s).gather(1, a)
                 
-                # compute target: r + gamma * max_a' Q(s',a') * (1 - done)
+
+                # Build the TD target without tracking gradients.
+                # Compute max_a' Q(s', a') from the network outputs,
+                # then compute the target as r + gamma * max_a' Q(s', a') * (1 - done)
                 with torch.no_grad():
                     max_next_q = policy_net(s2).max(dim=1)[0].unsqueeze(1)
                     target = r + dqn_cfg.gamma * max_next_q * (1.0 - d)
 
+                # Huber loss 
                 loss = F.smooth_l1_loss(q_sa, target)
 
+                # backpropagation step
                 optimizer.zero_grad()
                 loss.backward()
+                # gradient clipping
                 torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=dqn_cfg.grad_clip_norm)
                 optimizer.step()
 
@@ -137,7 +158,7 @@ def train_dqn(
             epsilon=eps,
         )
 
-        # print progress every 100 episodes 
+        # print progress every n episodes 
         if ep % progress_every == 0:
             d = log.as_dict_of_lists()
             w = progress_every
@@ -147,11 +168,7 @@ def train_dqn(
             avg_penalties = float(np.mean(d["penalties"][-w:]))
             avg_success = float(np.mean(d["success"][-w:])) * 100.0
 
-            print(
-                f"[Train] ep={ep:5d}/{dqn_cfg.episodes} | step={global_step:8d} | eps={eps:6.3f} | "
-                f"avgReward({w})={avg_reward:7.2f} | avgSteps({w})={avg_steps:6.1f} | "
-                f"avgPen({w})={avg_penalties:6.2f} | avgSucc({w})={avg_success:5.1f}%"
-            )
+            print(f"[Train] ep={ep}/{dqn_cfg.episodes} eps={eps:.3f} | R={avg_reward:.2f} S={avg_steps:.1f} P={avg_penalties:.2f} Succ={avg_success:.1f}%")
 
     env.close()
 
@@ -166,7 +183,7 @@ def train_dqn(
         "epsilon": np.array(d["epsilon"], dtype=float),
     }
 
-    # Save the final model (last episode)
+    # Save the final model (at the last episode)
     if outdir is not None:
         final_path = os.path.join(outdir, f"dqn_seed{seed}.pth")
         torch.save(policy_net.state_dict(), final_path)
@@ -189,12 +206,12 @@ if __name__ == "__main__":
     print("torch.cuda.is_available() =", torch.cuda.is_available())
     print("device =", "cuda" if torch.cuda.is_available() else "cpu")
 
-    # train
+    # Train DQN
     log, metrics, policy_net = train_dqn(global_cfg, dqn_cfg, seed=SEED, outdir=OUTDIR)
 
     print("\n[DQN] Finished.")
 
-
+    # Plotting
     ep = metrics["episode"]
     w = global_cfg.rolling_window
 

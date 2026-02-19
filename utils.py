@@ -18,10 +18,10 @@ def set_global_seeds(seed: int) -> None:
         torch.cuda.manual_seed_all(seed)
 
 
-# for plotting
+# rolling mean for smoothing curves in plots
 def rolling_mean(x, window):
     # for t < window: average over x[0:t]
-    #for t >= window: average over last `window` points
+    #for t >= window: average over last window values
     x = np.array(x, dtype=float)
     out = np.empty_like(x, dtype=float)
 
@@ -62,7 +62,8 @@ def save_single_run_curve(
     plt.savefig(outpath, dpi=200)
     plt.close()
     
-# for comparing dqn to q-learning rolling averages    
+
+# Saving rolling means into csvs for the overlay of Q-learning vs DQN training curves    
 def save_rolling_means(outdir: str, episode, reward, steps, penalties, success, w: int, tag: str):
     os.makedirs(outdir, exist_ok=True)
 
@@ -104,8 +105,8 @@ class EpisodeLog:
 def linear_epsilon(episode: int, eps_start: float, eps_end: float, decay_episodes: int) -> float:
     if decay_episodes <= 0:
         return eps_end
-    frac = min(1.0, episode / decay_episodes)
-    return eps_start + frac * (eps_end - eps_start)
+    frac = min(1.0, episode / decay_episodes) # fraction of decay completed
+    return eps_start + frac * (eps_end - eps_start) # linearly interpolate between start and end
 
 
 # scoring function for hyperparameter tuning

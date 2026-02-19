@@ -17,7 +17,7 @@ class DQN(nn.Module):
         self.l3 = nn.Linear(hidden, n_actions)                                  # 128 x 6   
 
     # forward pass 
-    def forward(self, state_idx: torch.Tensor) -> torch.Tensor:
+    def forward(self, state_idx: torch.Tensor) -> torch.Tensor: 
         x = self.emb(state_idx)          
         x = F.relu(self.l1(x))           
         x = F.relu(self.l2(x))           
@@ -25,21 +25,23 @@ class DQN(nn.Module):
         return x
     
     
-
+# Transition tuple for replay buffer
 Transition = namedtuple("Transition", ("state", "action", "reward", "next_state", "done"))
     
 # Replay buffer for DQN (stores transitions and samples batches for learning)
 class ReplayBuffer:
     def __init__(self, capacity: int, seed: int):
         self.buffer = deque(maxlen=capacity)
-        self.rng = random.Random(seed)
+        self.rng = random.Random(seed) 
 
     def __len__(self) -> int:
         return len(self.buffer)
 
+    # add a transition to the buffer
     def push(self, s: int, a: int, r: float, s2: int, done: bool) -> None:
         self.buffer.append(Transition(s, a, r, s2, done))
 
+    # randomly sample a batch of transitions from the buffer
     def sample(self, batch_size: int) -> Transition:
         batch = self.rng.sample(self.buffer, batch_size)
         return Transition(*zip(*batch))

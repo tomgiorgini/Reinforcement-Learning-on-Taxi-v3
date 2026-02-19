@@ -1,17 +1,3 @@
-"""
-overlay_training_plots.py
-
-Overlay plots (rolling mean) Q-learning vs DQN for:
-- Reward
-- Steps
-- Penalties
-- Success
-
-Creates:
-- overlay_<metric>_full.png
-- overlay_<metric>_zoom.png
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -63,19 +49,13 @@ def _plot_overlay(
 
 
 def main() -> None:
-    # =========================
-    # CONFIG (edit here only)
-    # =========================
     Q_CSV = "results/train_q_learning/q_learn_train_rolling_means.csv"
     DQN_CSV = "results/train_dqn/dqn_train_rolling_means.csv"
 
-    OUTDIR = Path("results/overlays")      # change if you want (e.g., Path("figures/compare"))
-    ZOOM_START = 1000                      # e.g. 1000
-    ZOOM_END = None                        # None = last episode available
+    OUTDIR = Path("results/overlays")     
+    ZOOM_START = 1000                      
+    ZOOM_END = None                        
 
-    # =========================
-    # LOAD
-    # =========================
     q_df = _load_csv(Q_CSV)
     dqn_df = _load_csv(DQN_CSV)
 
@@ -83,7 +63,7 @@ def main() -> None:
     ep_max = float(max(q_df["episode"].max(), dqn_df["episode"].max()))
     zoom_end = float(ZOOM_END) if ZOOM_END is not None else ep_max
 
-    # Metrics mapping: CSV column -> (label, filename stem)
+
     metrics = {
         "reward_rm": ("Reward", "reward"),
         "steps_rm": ("Steps", "steps"),
@@ -91,9 +71,6 @@ def main() -> None:
         "success_rm": ("Success", "success"),
     }
 
-    # =========================
-    # FULL RANGE
-    # =========================
     full_suffix = f"{int(ep_min)}-{int(ep_max)}"
     for col, (ylabel, stem) in metrics.items():
         _plot_overlay(

@@ -24,7 +24,7 @@ def main() -> None:
     SEED = 42
     TRAIN_EPISODES = 1500
     EVAL_EPISODES = 100
-    OUTDIR = "results/dqn_tuning_1500"
+    OUTDIR = "results/dqn_tuning"
     os.makedirs(OUTDIR, exist_ok=True)
 
     global_cfg = GlobalConfig()
@@ -35,10 +35,10 @@ def main() -> None:
     print("device =", device)
 
     # Search space
-    lrs = [5e-4, 1e-4, 5e-3]
-    batch_sizes = [128,256]
-    gammas = [0.97, 0.99] 
-    train_every_steps = [1, 2, 4]
+    lrs = [5e-4, 1e-4, 5e-3] # learning rates 
+    batch_sizes = [128,256] # batch sizes
+    gammas = [0.97, 0.99] # discount factors
+    train_every_steps = [1, 2, 4] # train every n steps
 
     total = len(lrs) * len(batch_sizes) * len(gammas) * len(train_every_steps)
     print(f"Total runs: {total}")
@@ -54,10 +54,12 @@ def main() -> None:
         )
 
         run_id = 0
+        # Iterate over all combinations of hyperparameters
         for lr, bs, tst, gamma in product(lrs, batch_sizes, train_every_steps, gammas):
             run_id += 1
             cfg = copy.deepcopy(base_cfg)
 
+            # Update config with current hyperparameters
             cfg.lr = lr
             cfg.batch_size = bs
             cfg.train_every_steps= tst
@@ -66,9 +68,9 @@ def main() -> None:
             max_steps = getattr(cfg, "max_steps_per_episode", 200)
             total_steps = int(TRAIN_EPISODES * max_steps)
 
-            # ONLY linear decay over the whole run
+            # linear decay over the whole run
             cfg.eps_start = 1.0
-            cfg.eps_end = 0.05
+            cfg.eps_end = 0.10
             cfg.eps_decay_steps = total_steps
 
             t0 = time.time()
@@ -91,6 +93,7 @@ def main() -> None:
             eval_penalties = float(np.mean(penalties))
             eval_success = float(np.mean(success))
 
+            # Compute score for this run
             s = score(eval_success, eval_reward, eval_steps, eval_penalties)
             dt = time.time() - t0
 
@@ -106,6 +109,7 @@ def main() -> None:
             )
             f.flush()
 
+            # Check if this is the best run so far
             if s > best_score:
                 best_score = s
                 best_run = {
@@ -118,15 +122,13 @@ def main() -> None:
                     "eval_steps": eval_steps,
                     "eval_penalties": eval_penalties,
                 }
-                torch.save(policy_net.state_dict(), os.path.join(OUTDIR, "best_model.pth"))
                 with open(os.path.join(OUTDIR, "best_run.txt"), "w", encoding="utf-8") as g:
                     g.write(str(best_run) + "\n")
 
-    print("\n================ BEST ================")
+    print("\n BEST ")
     print("Best score:", best_score)
     print("Best run:", best_run)
     print("CSV saved to:", csv_path)
-    print("Best model:", os.path.join(OUTDIR, "best_model.pth"))
 
 
 if __name__ == "__main__":

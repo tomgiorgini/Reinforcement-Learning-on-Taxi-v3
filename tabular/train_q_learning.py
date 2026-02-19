@@ -19,6 +19,8 @@ from utils import linear_epsilon
 
 # Q-learning training loop
 def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int):
+
+    # Create environment and initialize Q-table
     env = gym.make(global_cfg.env_id)
     n_states = env.observation_space.n
     n_actions = env.action_space.n
@@ -27,14 +29,17 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
     log = EpisodeLog()
 
     for ep in range(1, q_cfg.episodes + 1):
+        # Linear epsilon decay
         eps = linear_epsilon(ep, q_cfg.eps_start, q_cfg.eps_end, q_cfg.eps_decay_episodes)
-        obs, _ = env.reset(seed=seed + ep)
 
+        # environment reset
+        obs, _ = env.reset(seed=seed + ep)
         ep_reward = 0.0
         ep_steps = 0
         ep_penalties = 0
         success = False
 
+        # epsilon-greedy action selection 
         for _ in range(q_cfg.max_steps_per_episode):
             if np.random.rand() < eps:
                 action = env.action_space.sample()
@@ -43,15 +48,18 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
 
             next_obs, reward, terminated, truncated, _ = env.step(action)
 
+            # Q-learning update (Bellman equation)
             td_target = reward + q_cfg.gamma * np.max(Q[next_obs])
             td_error = td_target - Q[obs, action]
             Q[obs, action] += q_cfg.alpha * td_error
 
+            # Reward and penalty tracking
             ep_reward += float(reward)
             ep_steps += 1
             if float(reward) == -10.0:
                 ep_penalties += 1
 
+            # Check for episode termination
             if terminated:
                 if float(reward) == 20.0:
                     success = True
@@ -61,6 +69,8 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
 
             obs = next_obs
 
+
+        # Log episode metrics, training info and terminal state
         log.add(
             algorithm="Q_LEARNING",
             seed=seed,
@@ -74,6 +84,7 @@ def train_q_learning(global_cfg: GlobalConfig, q_cfg: QLearningConfig, seed: int
 
     env.close()
 
+    # Convert log to dict of lists for plotting
     d = log.as_dict_of_lists()
     metrics = {
         "episode": np.array(d["episode"], dtype=int),
@@ -92,10 +103,12 @@ if __name__ == "__main__":
     OUTDIR = "results/train_q_learning"
     os.makedirs(OUTDIR, exist_ok=True)
 
+    # Configurations
     global_cfg = GlobalConfig()
     q_cfg = QLearningConfig()
     q_cfg.episodes = EPISODES
 
+    # Train Q-learning and save results
     log, metrics, Q = train_q_learning(global_cfg, q_cfg, seed=SEED)
     np.save(os.path.join(OUTDIR, f"Q_seed{SEED}.npy"), Q)
 
@@ -192,6 +205,7 @@ if __name__ == "__main__":
     plt.savefig(os.path.join(OUTDIR, f"success_zoom.png"), dpi=150)
     plt.close()
     
+    # Save rolling means into csv for overlay plots
     save_rolling_means(
     outdir=OUTDIR,
     episode=ep,
@@ -203,4 +217,4 @@ if __name__ == "__main__":
     tag="q_learn_train",
     )
 
-    print(f"[Q-LEARNING] Done.")
+    print(f"[Q-LEARNING] Done. Results saved to {OUTDIR}") 
