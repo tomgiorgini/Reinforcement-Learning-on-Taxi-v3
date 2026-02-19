@@ -35,12 +35,12 @@ def main() -> None:
     print("device =", device)
 
     # Search space
-    lrs = [1e-3, 1e-4, 1e-5]
-    batch_sizes = [64, 128]
-    target_updates = [1000, 2000, 3000]
-    gammas = [0.95, 0.99] 
+    lrs = [5e-4, 1e-4, 5e-3]
+    batch_sizes = [128,256]
+    gammas = [0.97, 0.99] 
+    train_every_steps = [1, 2, 4]
 
-    total = len(lrs) * len(batch_sizes) * len(target_updates) * len(gammas)
+    total = len(lrs) * len(batch_sizes) * len(gammas) * len(train_every_steps)
     print(f"Total runs: {total}")
 
     csv_path = os.path.join(OUTDIR, "tuning_results.csv")
@@ -49,18 +49,18 @@ def main() -> None:
 
     with open(csv_path, "w", encoding="utf-8") as f:
         f.write(
-            "run_id,lr,batch_size,target_update_every_steps,gamma,"
+            "run_id,lr,batch_size,train_every_steps,gamma,"
             "eval_success,eval_reward,eval_steps,eval_penalties,score,train_seconds\n"
         )
 
         run_id = 0
-        for lr, bs, tgt, gamma in product(lrs, batch_sizes, target_updates, gammas):
+        for lr, bs, tst, gamma in product(lrs, batch_sizes, train_every_steps, gammas):
             run_id += 1
             cfg = copy.deepcopy(base_cfg)
 
             cfg.lr = lr
             cfg.batch_size = bs
-            cfg.target_update_every_steps = tgt
+            cfg.train_every_steps= tst
             cfg.gamma = gamma
 
             max_steps = getattr(cfg, "max_steps_per_episode", 200)
@@ -95,13 +95,13 @@ def main() -> None:
             dt = time.time() - t0
 
             print(
-                f"[{run_id:03d}/{total}] lr={lr:g} bs={bs} tgt={tgt} gamma={gamma} | "
+                f"[{run_id:03d}/{total}] lr={lr:g} bs={bs} tst={tst} gamma={gamma} | "
                 f"succ={eval_success:.3f} r={eval_reward:.2f} steps={eval_steps:.1f} pen={eval_penalties:.2f} | "
                 f"score={s:.2f} | {dt:.1f}s"
             )
 
             f.write(
-                f"{run_id},{lr},{bs},{tgt},{gamma},"
+                f"{run_id},{lr},{bs},{tst},{gamma},"
                 f"{eval_success},{eval_reward},{eval_steps},{eval_penalties},{s},{dt}\n"
             )
             f.flush()
@@ -111,7 +111,7 @@ def main() -> None:
                 best_run = {
                     "lr": lr,
                     "batch_size": bs,
-                    "target_update_every_steps": tgt,
+                    "train_every_steps": tst,
                     "gamma": gamma,
                     "eval_success": eval_success,
                     "eval_reward": eval_reward,

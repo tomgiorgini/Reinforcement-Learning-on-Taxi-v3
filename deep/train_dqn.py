@@ -19,7 +19,7 @@ from utils import EpisodeLog
 from config import GlobalConfig, DQNConfig
 from utils import save_rolling_means
 from utils import set_global_seeds
-from utils import linear_epsilon_by_step
+from utils import linear_epsilon
 # DQN module
 from deep.DQN import DQN
 from deep.DQN import ReplayBuffer
@@ -63,6 +63,7 @@ def train_dqn(
 
     # training loop
     for ep in range(1, dqn_cfg.episodes + 1):
+        eps = linear_epsilon(ep, dqn_cfg.eps_start, dqn_cfg.eps_end, dqn_cfg.eps_decay_episodes)
         obs, _ = env.reset(seed=seed + ep)
 
         ep_reward = 0.0
@@ -70,14 +71,9 @@ def train_dqn(
         ep_penalties = 0
         success = False
 
-        # epsilon logged as the final epsilon reached in the episode
-        eps = linear_epsilon_by_step(global_step, dqn_cfg.eps_start, dqn_cfg.eps_end, dqn_cfg.eps_decay_steps)
-
         for _ in range(dqn_cfg.max_steps_per_episode):
             global_step += 1
-
-            # epsilon-greedy (step-based schedule)
-            eps = linear_epsilon_by_step(global_step, dqn_cfg.eps_start, dqn_cfg.eps_end, dqn_cfg.eps_decay_steps)
+        
             if np.random.rand() < eps:
                 action = env.action_space.sample()
             else:

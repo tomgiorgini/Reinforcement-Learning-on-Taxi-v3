@@ -100,19 +100,13 @@ class EpisodeLog:
         return out
     
     
-# Linear epsilon decay by episode (for Q-learning)
+# Linear epsilon decay by episode
 def linear_epsilon(episode: int, eps_start: float, eps_end: float, decay_episodes: int) -> float:
     if decay_episodes <= 0:
         return eps_end
     frac = min(1.0, episode / decay_episodes)
     return eps_start + frac * (eps_end - eps_start)
 
-# Linear epsilon decay by steps (for DQN)
-def linear_epsilon_by_step(step: int, eps_start: float, eps_end: float, decay_steps: int) -> float:
-    if decay_steps <= 0:
-        return eps_end
-    frac = min(1.0, step / decay_steps)
-    return eps_start + frac * (eps_end - eps_start)
 
 # scoring function for hyperparameter tuning
 def score(eval_success: float, eval_reward: float, eval_steps: float, eval_penalties: float) -> float:

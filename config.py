@@ -36,8 +36,8 @@ class DQNConfig:
 
     # Linear decay
     eps_start: float = 1.0
-    eps_end: float = 0.05
-    eps_decay_steps: int = 60000  #environment steps until eps_end
+    eps_end: float = 0.10
+    eps_decay_episodes: int = 1500 
 
     # Replay buffer
     replay_capacity: int = 50_000
