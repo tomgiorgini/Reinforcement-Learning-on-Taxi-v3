@@ -96,7 +96,7 @@ def train_dqn(
                 success = True
 
             # learn
-            if len(replay) >= dqn_cfg.learning_starts and (global_step % dqn_cfg.train_every_steps == 0):
+            if len(replay) >= dqn_cfg.learning_starts and (global_step % dqn_cfg.train_every_episodes == 0):
                 batch = replay.sample(dqn_cfg.batch_size)
 
                 s = torch.tensor(batch.state, dtype=torch.long, device=device)

@@ -32,7 +32,7 @@ class DQNConfig:
     max_steps_per_episode: int = 200
 
     # Discount
-    gamma: float = 0.99
+    gamma: float = 0.97
 
     # Linear decay
     eps_start: float = 1.0
@@ -41,12 +41,12 @@ class DQNConfig:
 
     # Replay buffer
     replay_capacity: int = 50_000
-    batch_size: int = 128
+    batch_size: int = 256
     learning_starts: int = 2_000   # collect steps before learning begins
-    train_every_steps: int = 1     # gradient step frequency
+    train_every_episodes: int = 2     # gradient step frequency
 
     # Optimizer
-    lr: float = 1e-4
+    lr: float = 5e-4
     grad_clip_norm: float = 10.0
 
 

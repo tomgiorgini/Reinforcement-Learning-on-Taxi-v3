@@ -96,9 +96,9 @@ def load_dqn_model(
 if __name__ == "__main__":
     ENV_ID = "Taxi-v3"
     SEED = 42
-    TEST_EPISODES = 1000
+    TEST_EPISODES = 100
     MAX_STEPS = 200
-    ROLLING = 200
+    ROLLING = 50
 
     MODEL_PATH = "results/train_dqn/dqn_seed42.pth"
 
@@ -142,33 +142,33 @@ if __name__ == "__main__":
 
     save_single_run_curve(
         ep_axis, rewards,
-        title="Greedy TEST - Reward per episode (0)",
+        title="Greedy TEST - Reward per episode (100)",
         xlabel="Test episode", ylabel="Reward",
-        outpath=os.path.join(OUTDIR, "test_reward_1000.png"),
+        outpath=os.path.join(OUTDIR, "test_reward_100.png"),
         rolling_window=ROLLING,
     )
 
     save_single_run_curve(
         ep_axis, steps,
-        title="Greedy TEST - Steps per episode (1000)",
+        title="Greedy TEST - Steps per episode (100)",
         xlabel="Test episode", ylabel="Steps",
-        outpath=os.path.join(OUTDIR, "test_steps_1000.png"),
+        outpath=os.path.join(OUTDIR, "test_steps_100.png"),
         rolling_window=ROLLING,
     )
 
     save_single_run_curve(
         ep_axis, penalties,
-        title="Greedy TEST - Penalties per episode (1000)",
+        title="Greedy TEST - Penalties per episode (100)",
         xlabel="Test episode", ylabel="Penalties",
-        outpath=os.path.join(OUTDIR, "test_penalties_1000.png"),
+        outpath=os.path.join(OUTDIR, "test_penalties_100.png"),
         rolling_window=ROLLING,
     )
 
     save_single_run_curve(
         ep_axis, success,
-        title="Greedy TEST - Success per episode (1000)",
+        title="Greedy TEST - Success per episode (100)",
         xlabel="Test episode", ylabel="Success",
-        outpath=os.path.join(OUTDIR, "test_success_1000.png"),
+        outpath=os.path.join(OUTDIR, "test_success_100.png"),
         rolling_window=ROLLING,
     )
 
