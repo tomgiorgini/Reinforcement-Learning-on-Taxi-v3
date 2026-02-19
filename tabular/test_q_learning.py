@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     Q_PATH = "results/train_q_learning/Q_seed42.npy"
     OUTDIR = "results/test_q_learning_seed42"
-    ROLLING = 50
+    ROLLING = 200
 
     os.makedirs(OUTDIR, exist_ok=True)
 

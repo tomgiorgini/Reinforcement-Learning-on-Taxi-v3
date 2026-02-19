@@ -1,1 +1,0 @@
-{'lr': 0.001, 'batch_size': 128, 'target_update_every_steps': 1000, 'decay_mode': 'linear_full', 'eval_success': 1.0, 'eval_reward': 7.34, 'eval_steps': 13.66, 'eval_penalties': 0.0}

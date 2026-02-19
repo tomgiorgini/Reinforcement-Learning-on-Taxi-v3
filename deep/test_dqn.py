@@ -98,7 +98,7 @@ if __name__ == "__main__":
     SEED = 42
     TEST_EPISODES = 1000
     MAX_STEPS = 200
-    ROLLING = 20
+    ROLLING = 200
 
     MODEL_PATH = "results/train_dqn/dqn_seed42.pth"
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
     save_single_run_curve(
         ep_axis, rewards,
-        title="Greedy TEST - Reward per episode (1000)",
+        title="Greedy TEST - Reward per episode (0)",
         xlabel="Test episode", ylabel="Reward",
         outpath=os.path.join(OUTDIR, "test_reward_1000.png"),
         rolling_window=ROLLING,

@@ -42,23 +42,13 @@ def train_dqn(
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # initialize policy and target networks
+    # initialize policy network, optimizer, replay buffer, and logging
     policy_net = DQN(
         n_states=n_states,
         n_actions=n_actions,
         emb_dim=dqn_cfg.embedding_dim,
         hidden=dqn_cfg.hidden_dim,
     ).to(device)
-
-    target_net = DQN(
-        n_states=n_states,
-        n_actions=n_actions,
-        emb_dim=dqn_cfg.embedding_dim,
-        hidden=dqn_cfg.hidden_dim,
-    ).to(device)
-
-    target_net.load_state_dict(policy_net.state_dict())
-    target_net.eval()
 
     optimizer = optim.Adam(policy_net.parameters(), lr=dqn_cfg.lr)
     replay = ReplayBuffer(capacity=dqn_cfg.replay_capacity, seed=seed)
@@ -71,6 +61,7 @@ def train_dqn(
     if outdir is not None:
         os.makedirs(outdir, exist_ok=True)
 
+    # training loop
     for ep in range(1, dqn_cfg.episodes + 1):
         obs, _ = env.reset(seed=seed + ep)
 
@@ -118,10 +109,12 @@ def train_dqn(
                 s2 = torch.tensor(batch.next_state, dtype=torch.long, device=device)
                 d = torch.tensor(batch.done, dtype=torch.float32, device=device).unsqueeze(1)
 
+                # gather Q(s,a)
                 q_sa = policy_net(s).gather(1, a)
-
+                
+                # compute target: r + gamma * max_a' Q(s',a') * (1 - done)
                 with torch.no_grad():
-                    max_next_q = target_net(s2).max(dim=1)[0].unsqueeze(1)
+                    max_next_q = policy_net(s2).max(dim=1)[0].unsqueeze(1)
                     target = r + dqn_cfg.gamma * max_next_q * (1.0 - d)
 
                 loss = F.smooth_l1_loss(q_sa, target)
@@ -130,10 +123,6 @@ def train_dqn(
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(policy_net.parameters(), max_norm=dqn_cfg.grad_clip_norm)
                 optimizer.step()
-
-            # target network update
-            if global_step % dqn_cfg.target_update_every_steps == 0:
-                target_net.load_state_dict(policy_net.state_dict())
 
             if done:
                 break

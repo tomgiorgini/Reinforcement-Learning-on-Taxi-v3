@@ -12,17 +12,17 @@ class GlobalConfig:
 @dataclass
 class QLearningConfig:
     # Training
-    episodes: int = 5000
+    episodes: int = 3000
     max_steps_per_episode: int = 200
 
     # Q-learning update
-    alpha: float = 0.3
-    gamma: float = 0.9
+    alpha: float = 0.7
+    gamma: float = 0.99
 
     # Linear decay
     eps_start: float = 1.0
-    eps_end: float = 0.05
-    eps_decay_episodes: int = 2000
+    eps_end: float = 0.10
+    eps_decay_episodes: int = 1500
 
 
 @dataclass
@@ -37,7 +37,7 @@ class DQNConfig:
     # Linear decay
     eps_start: float = 1.0
     eps_end: float = 0.05
-    eps_decay_steps: int = 80_000  #environment steps until eps_end
+    eps_decay_steps: int = 60000  #environment steps until eps_end
 
     # Replay buffer
     replay_capacity: int = 50_000
@@ -46,11 +46,9 @@ class DQNConfig:
     train_every_steps: int = 1     # gradient step frequency
 
     # Optimizer
-    lr: float = 1e-3
+    lr: float = 1e-4
     grad_clip_norm: float = 10.0
 
-    # Target network update
-    target_update_every_steps: int = 1000
 
     # Network architecture
     embedding_dim: int = 32
