@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-# seeding
+#seeding
 def set_global_seeds(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
