@@ -21,8 +21,8 @@ from utils import save_rolling_means
 from utils import set_global_seeds
 from utils import linear_epsilon
 # DQN module
-from deep.DQN import DQN
-from deep.DQN import ReplayBuffer
+from dqn.DQN import DQN
+from dqn.DQN import ReplayBuffer
 
 
 # Main training loop for DQN

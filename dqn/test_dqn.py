@@ -15,7 +15,7 @@ if _PROJECT_ROOT not in sys.path:
 
 from utils import save_single_run_curve
 
-from deep.DQN import DQN
+from dqn.DQN import DQN
 
 
 # Run greedy DQN policy for given episodes and return metrics arrays.

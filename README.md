@@ -1,11 +1,121 @@
-This project is a compact but fairly complete reinforcement learning study built on the Taxi-v3 environment from Gymnasium. Its goal is to compare two different solution families for the same discrete control problem: a classic tabular Q-learning agent and a Deep Q-Network based agent. Rather than focusing only on final performance, the repository is structured to show the full experimental workflow, including training, greedy evaluation, hyperparameter tuning, metric logging, rolling-average plots, and overlay comparisons between methods.
+# Reinforcement Learning on Taxi-v3
 
-The repository is divided into a few clear modules. The tabular folder contains the Q-learning pipeline, with separate scripts for training, greedy testing, and hyperparameter search. The dqn folder mirrors the same structure for the neural approach, including the DQN model definition, training, testing, and tuning scripts. At the project root, config.py centralizes the main settings for both algorithms, while utils.py provides common utilities such as seeding, rolling means, plotting helpers, logging structures, epsilon scheduling, and a custom score function used during tuning. The results folder stores the outputs of the experiments, including training and test curves, tuning summaries, and overlay plots that make the comparison between Q-learning and DQN easier to inspect.
+**Tabular Q-learning and a neural Q-learning agent, compared on the same discrete control task.**
 
-From a technical perspective, the tabular baseline is a standard epsilon-greedy Q-learning implementation over the discrete Taxi-v3 state-action space. It uses a Q-table initialized to zero, updates values through the Bellman equation, and tracks episode reward, number of steps, penalties, success rate, and exploration level over training. The default configuration runs for 3000 episodes with alpha equal to 0.7, gamma equal to 0.99, and a linearly decaying epsilon from 1.0 to 0.10. The test script then evaluates the learned policy greedily on a separate seed range, reporting mean reward, steps, penalties, and success rate over 1000 episodes.
+A university project exploring how a lookup table and a learned state representation solve passenger pickup and delivery in Gymnasium's Taxi-v3. Includes training, greedy evaluation, hyperparameter search, saved models, and learning curves.
 
-The deep reinforcement learning side uses a compact DQN tailored to the discrete nature of Taxi-v3. Instead of one-hot encoding the state, the model first maps each state index to a learned embedding vector, then passes it through a multilayer perceptron with two hidden layers before producing Q-values for the available actions. Training uses an epsilon-greedy policy, a replay buffer, Adam optimization, Huber loss, and gradient clipping. The default DQN configuration also runs for 3000 episodes and includes settings for replay capacity, batch size, learning start threshold, embedding dimension, and hidden size. After training, the learned policy is saved and tested greedily on a disjoint seed range, with the same core evaluation metrics used for the tabular agent.
+**Stack:** Python · Gymnasium · NumPy · PyTorch · Matplotlib
 
-A useful strength of the repository is that it treats comparison as a first-class part of the project. Both methods are trained under the same environment and broadly similar episodic setup, both produce the same family of learning curves, and both have dedicated hyperparameter search scripts. For Q-learning, the tuning grid explores combinations of alpha, gamma, final epsilon, and epsilon-decay length. For DQN, the search varies learning rate, batch size, update frequency, and discount factor, and records the results in a CSV plus a best-run summary file. The scoring function used in both searches rewards success rate and return while penalizing long episodes and penalties, so model selection is based on a balanced notion of control quality rather than on a single metric.
+## Project at a glance
 
-Overall, the repository is best described as a comparative reinforcement learning project for discrete control. It is not just a minimal implementation of Taxi-v3, and not just a notebook-level demonstration. It is a small experimental framework that lets a reader study how a tabular method and a neural approximation method behave under the same task, how their training dynamics differ, how tuning affects performance, and how the final greedy policies compare once exploration is removed. For full details, the most relevant sources are the training, testing, tuning, and results files in the repository.
+- **Question:** How do tabular Q-learning and a DQN-style agent behave on a small, discrete environment?
+- **Implementation:** A 500 × 6 Q-table versus a state embedding and a two-hidden-layer neural network with experience replay.
+- **Evaluation:** Episode return, steps, illegal pickup/drop-off penalties, and successful deliveries.
+- **Recorded result:** Both best-run tuning summaries report 100% success and an average return of 8.01 across 100 greedy evaluation episodes. These are stored model-selection results, not a multi-seed benchmark.
+
+![Training reward comparison](results/overlays/overlay_reward_full.png)
+
+*Stored training comparison. Exploration remains active during training; these curves should be read separately from greedy evaluation results. See [experimental details](docs/EXPERIMENTS.md).*
+
+## The task
+
+The taxi must collect a passenger and deliver them to the correct destination on a 5 × 5 grid. There are 500 encoded states and six actions: south, north, east, west, pickup, and drop-off. Rewards are +20 for a successful delivery, −10 for an illegal pickup/drop-off, and −1 otherwise. Episodes are capped at 200 steps.
+
+Both agents receive the integer state ID and select from all six actions; neither uses action masking. See the [official Taxi documentation](https://gymnasium.farama.org/environments/toy_text/taxi/) for background. That page also covers newer versions; this project intentionally uses **Taxi-v3**.
+
+## Quick start
+
+Use Python 3.10 or newer. Run all commands from the repository root. A GPU is optional; DQN scripts automatically use CUDA when available.
+
+```bash
+git clone https://github.com/tomgiorgini/Reinforcement-Learning-on-Taxi-v3.git
+cd Reinforcement-Learning-on-Taxi-v3
+python -m venv .venv
+```
+
+Activate the environment:
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+```
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Gymnasium is pinned to retain Taxi-v3. Other dependencies are not a historical lockfile; the original experiment environment was not recorded. PyTorch is required even for tabular scripts because shared utilities import it.
+
+### Evaluate the included models
+
+A Q-table and a DQN checkpoint are included, so you can start without retraining:
+
+```bash
+python tabular/test_q_learning.py
+python dqn/test_dqn.py
+```
+
+Each command prints mean reward, steps, penalties, and success rate, then writes plots under `results/test_q_learning/` or `results/test_dqn/`. Defaults evaluate **1,000 episodes for Q-learning and 100 for DQN**. For a matched comparison, set `TEST_EPISODES = 1000` in the DQN evaluator; see the [evaluation protocol](docs/EXPERIMENTS.md#evaluation-protocol).
+
+### Train your own agents
+
+```bash
+python tabular/train_q_learning.py
+python dqn/train_dqn.py
+```
+
+Each agent trains for 3,000 episodes by default and saves a model, learning curves, and a rolling-mean CSV. **Rerunning scripts overwrites their corresponding tracked outputs**, including checkpoints when training.
+
+Most hyperparameters live in [config.py](config.py). Episode counts, seeds, output paths, and evaluation settings also appear in scripts' main blocks; there is no command-line argument interface. See the [running guide](docs/RUNNING.md) for outputs, tuning, and troubleshooting.
+
+## What is implemented?
+
+| | Tabular Q-learning | DQN-style agent |
+| --- | --- | --- |
+| State representation | Direct Q-table lookup | Learned 32-dimensional embedding |
+| Value function | 500 × 6 table | 32 → 128 → 128 → 6 MLP with ReLU hidden layers |
+| Learning | One-step Q-learning update | Replay batches, Adam, Huber loss, gradient clipping |
+| Exploration | Linear epsilon-greedy schedule | Linear epsilon-greedy schedule |
+| Saved model | NumPy `.npy` table | PyTorch `.pth` state dictionary |
+
+The neural agent uses the **same online network** for current and next-state values. It has no separate target network, so it is a simplified DQN-style implementation. See the [update rules and limitations](docs/EXPERIMENTS.md).
+
+## Recorded results
+
+These values come from existing **best-run tuning summaries**, reporting 1,500 training episodes and 100 greedy evaluation episodes:
+
+| Agent | Success rate | Mean return | Mean steps | Mean penalties |
+| --- | ---: | ---: | ---: | ---: |
+| Q-learning | 100% | 8.01 | 12.99 | 0.00 |
+| DQN-style | 100% | 8.01 | 12.99 | 0.00 |
+
+Sources: [Q-learning tuning log](results/TUNING_Q_LEARNING.TXT), [DQN best-run summary](results/dqn_tuning/best_run.txt), and [DQN search CSV](results/dqn_tuning/tuning_results.csv).
+
+These records show successful policies on the reported evaluation sequence. They do not establish that the methods are equivalent or that the neural agent improves on the tabular baseline. Stored best configurations differ from today's defaults, and the DQN tuning script contains [configuration mismatches](docs/EXPERIMENTS.md#limitations-and-next-steps).
+
+![Training success comparison](results/overlays/overlay_success_full.png)
+
+## Repository structure
+
+| Path | Contents |
+| --- | --- |
+| [tabular/](tabular/) | Q-learning training, greedy evaluation, and grid search |
+| [dqn/](dqn/) | Embedding network, replay buffer, training, evaluation, and grid search |
+| [config.py](config.py) | Environment and algorithm defaults |
+| [utils.py](utils.py) | Logging, smoothing, seeding, and tuning score |
+| [results/](results/) | Stored checkpoints, plots, CSVs, and tuning logs |
+| [docs/RUNNING.md](docs/RUNNING.md) | Commands, outputs, configuration, and troubleshooting |
+| [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md) | Protocol, metrics, evidence, and limitations |
+
+## Scope and next steps
+
+This project demonstrates value-based RL, experience replay, experiment logging, hyperparameter search, and evaluation of learned policies. Taxi's small state space makes a tabular baseline practical and provides a useful setting for studying the additional complexity of function approximation.
+
+Next steps are to align evaluation budgets, fix inactive DQN tuning fields, standardize terminal-state handling and seeding, and report results across multiple training seeds. A target-network variant would provide a useful extension to the neural baseline. See the [detailed limitations](docs/EXPERIMENTS.md#limitations-and-next-steps).
